@@ -23,7 +23,14 @@ void initState() {
   getPermissions();
 }
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp, 
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(const MainApp());
 }
 
@@ -57,7 +64,7 @@ class _HomePageState extends State<HomePage> {
   BluetoothDevice? selectedDevice;
 
   bool connectionStatus = false;
-  String receivedValue = "400";
+  String receivedValue = "0";
 
   bool recording = false;
 
@@ -82,16 +89,27 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Color _getColor(int value) {
+    if (value < 800) {
+      return Colors.green;
+    } else if (value < 1500) {
+      return Colors.yellow;
+    } else {
+      return Colors.red;
+    }
+  }
+
   @override
   Widget build(BuildContext context){
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: Color(0xFF092429),
+        backgroundColor: Color(0xFF051518),
         appBar: AppBar(
           backgroundColor: Color(0xFF051518),
+          centerTitle: true,
           title: Text(
-            "Main Menu", 
+            connectionStatus ? "${selectedDevice!.platformName} Connected" : "No Device Connected", 
             style: TextStyle(
               color: Colors.white
             ),
@@ -101,103 +119,102 @@ class _HomePageState extends State<HomePage> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              flex: 1,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      margin: EdgeInsets.fromLTRB(8, 4, 4, 4),
-                      child: ElevatedButton.icon(
-                        onPressed: () => setState(() {
-                          _navigateAndGetDevice(context);
-                        }),
-                        icon: Icon(
-                          Icons.bluetooth,
-                          size: 18,
-                          color: Colors.black,
+            FittedBox(
+              fit: BoxFit.fill,
+              child: SizedBox(
+                height: 50,
+                width: 50,
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          color: Color(0xFF051518),
                         ),
-                        label: connectionStatus ? Text("Change Device") : Text("Connect Device"),
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStatePropertyAll<Color>(Colors.grey.shade100),
-                          foregroundColor: WidgetStatePropertyAll<Color>(Colors.black),
-                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0)
-                            ),
-                          ),
-                        )
-                      ),
-                    )
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Container(
-                      margin: EdgeInsets.fromLTRB(4, 4, 8, 4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.0),
-                        color: connectionStatus ? Colors.white : Colors.grey.shade600,
-                      ),
-                      child: Center(
-                        child: Text(
-                          connectionStatus ? "${selectedDevice!.platformName} Connected" : "No Device Connected", 
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    )
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              flex: 5,
-              child: Container(
-                margin: EdgeInsets.fromLTRB(8, 4, 8, 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  color: Color(0xFF051518),
-                ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Container(),
-                      ),
-                      Expanded(
-                        flex: 10,
-                        child: Center(
-                          child: Text(
-                            connectionStatus ? receivedValue : "", 
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 150,
-                              color: Colors.white
-                            ),
+                        child: Padding(
+                          padding: EdgeInsets.all(5.0),
+                          child: CircularProgressIndicator(
+                            value: connectionStatus ? int.parse(receivedValue) / 5000.0 : 0,
+                            backgroundColor: Colors.grey.shade700,
+                            color: _getColor(int.parse(receivedValue)),
                           ),
                         ),
                       ),
-                      Expanded(
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                    Center(
+                      child: FittedBox(
+                        fit: BoxFit.fitHeight,
                         child: Text(
-                          connectionStatus ? "CO₂ ppm" : "",
+                          connectionStatus ? receivedValue : "0", 
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 10,
                             color: Colors.white
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: 4,
-                        child: Container(),
-                      )
-                    ],
-                  ),
+                    ),
+                    Center(
+                      child: FittedBox(
+                        fit: BoxFit.fitHeight,
+                        child: Text(
+                          "CO₂ ppm",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 2,
+                            color: Colors.white
+                          ),
+                        ),
+                      ),
+                    ),
+
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-            Expanded(
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: ElevatedButton.icon(
+                onPressed: () => setState(() {
+                  if (connectionStatus) {
+                    selectedDevice!.disconnect();
+                  } else {
+                    _navigateAndGetDevice(context);
+                  }
+                }),
+                icon: Icon(
+                  size: 20,
+                  connectionStatus ? Icons.bluetooth_disabled : Icons.bluetooth,
+                  color: Colors.black,
+                ),
+                label: FittedBox(
+                  fit: BoxFit.fitHeight,
+                  child: Text(
+                    connectionStatus ? "Disconnect Device" : "Connect Device",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll<Color>(Colors.grey.shade100),
+                  foregroundColor: WidgetStatePropertyAll<Color>(Colors.black),
+                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0)
+                    ),
+                  ),
+                )
+              ),
+            ),
+
+            /* Expanded(
               flex: 2,
               child: Container(
                 margin: EdgeInsets.fromLTRB(8, 4, 8, 4),
@@ -241,7 +258,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-            ),
+            ), */
           ],
         ),
       )

@@ -21,7 +21,7 @@ class _BluetoothSettingsState extends State<BluetoothSettings> {
   @override
   Widget build(BuildContext context){
     return Scaffold(
-        backgroundColor: Color(0xFF092429),
+        backgroundColor: Color(0xFF051518),
         appBar: AppBar(
           leading: BackButton(
             onPressed: () => Navigator.pop(context),
@@ -40,8 +40,11 @@ class _BluetoothSettingsState extends State<BluetoothSettings> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+
+                
+
               Padding(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
                 child: StreamBuilder<bool>(
                   stream: FlutterBluePlus.isScanning,
                   initialData: false,
@@ -49,15 +52,27 @@ class _BluetoothSettingsState extends State<BluetoothSettings> {
                     if (snapshot.data!) {
                       return ElevatedButton.icon(
                         onPressed: () => FlutterBluePlus.stopScan(),
-                        label: Text(
-                          "Stop Scan",
-                          style: TextStyle(
-                            color: Colors.black,
+                        icon: const Icon(Icons.stop,color: Colors.red),
+                        label: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: Text(
+                            "Stop Scan",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 20,
+                            ),
                           ),
                         ),
-                        icon: const Icon(Icons.stop,color: Colors.red),
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStatePropertyAll<Color>(Colors.grey.shade100),
+                          foregroundColor: WidgetStatePropertyAll<Color>(Colors.black),
+                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)
+                            ),
+                          ),
+                        )
                       );
-                      
                     } else {
                       return ElevatedButton.icon(
                         onPressed: () => {
@@ -68,52 +83,30 @@ class _BluetoothSettingsState extends State<BluetoothSettings> {
                             FlutterBluePlus.startScan(timeout: const Duration(seconds: 4))
                           }
                         },
-                        label: Text(
-                          "Scan for Devices",
-                          style: TextStyle(
-                            color: Colors.black,
+                        icon: Icon(Icons.search,color: Colors.black),
+                        label: FittedBox(
+                          fit: BoxFit.fitHeight,
+                          child: Text(
+                            "Scan for Devices",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 20,
+                            ),
                           ),
                         ),
-                        icon: Icon(Icons.search,color: Colors.black),
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStatePropertyAll<Color>(Colors.grey.shade100),
+                          foregroundColor: WidgetStatePropertyAll<Color>(Colors.black),
+                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)
+                            ),
+                          ),
+                        )
                       );
                     }
                   },
                 ),
-              ),
-              Builder(
-                builder: (context) {
-                  if (FlutterBluePlus.connectedDevices.isNotEmpty) {
-                    return Container(
-                      height: 700,
-                      child: ListView.builder(itemCount: FlutterBluePlus.connectedDevices.length,itemBuilder: (context,index){
-                        return Column(
-                          children: [
-                            ListTile(
-                              title: Text(FlutterBluePlus.connectedDevices[index].platformName,style: TextStyle(color: Colors.white),),
-                              leading: Icon(Icons.devices,color: Colors.white),
-                              trailing: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF092429),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                                          side: BorderSide(color: Colors.green)
-                                      )
-                                  ),
-                                  onPressed: () => setState(() {
-                                    FlutterBluePlus.connectedDevices[index].disconnect();
-                                    Navigator.pop(context);
-                                  }),
-                                  child: Text("Disconnect",style: TextStyle(color: Colors.white),)),
-                            ),
-                            Divider(),
-                          ],
-                        );
-                      }),
-                    );
-                  } else {
-                    return Container();
-                  }
-                }
               ),
               StreamBuilder<List<BluetoothDevice>>(
                 stream: Stream.periodic(const Duration(seconds:10)).asyncMap((_) => FlutterBluePlus.systemDevices([])),
