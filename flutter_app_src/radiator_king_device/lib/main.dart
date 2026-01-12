@@ -78,7 +78,6 @@ class _HomePageState extends State<HomePage> {
     Timer _everyTwoSeconds = Timer.periodic(Duration(seconds: 2), (Timer t) {
       setState(() {
         if (connectionStatus){
-          print("Straight up writing that data");
           writeData();
 
           if (recording){
