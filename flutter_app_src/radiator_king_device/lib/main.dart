@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:radiator_king_device/bluetooth.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+
+import 'package:radiator_king_device/generate_report.dart';
+import 'package:radiator_king_device/info.dart';
 
 // Get Bluetooth Permissions
 Future getPermissions()async{
@@ -50,7 +51,7 @@ class MainApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget{
-  const HomePage({super.key});
+  const HomePage({super.key, highestPPMValue});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -66,22 +67,19 @@ class _HomePageState extends State<HomePage> {
   bool connectionStatus = false;
   String receivedValue = "0";
 
-  bool recording = false;
-
-  List<String> recordedValues = [];
-  String fileLocation = "";
+  int highestPPMValue = 0;
 
   @override
   void initState() {
     super.initState();
 
-    Timer _everyTwoSeconds = Timer.periodic(Duration(seconds: 2), (Timer t) {
+    Timer _ = Timer.periodic(Duration(seconds: 2), (Timer t) {
       setState(() {
         if (connectionStatus){
           writeData();
 
-          if (recording){
-            recordedValues.add(receivedValue);
+          if (int.parse(receivedValue) > highestPPMValue){
+            highestPPMValue = int.parse(receivedValue);
           }
         }
       });
@@ -105,6 +103,16 @@ class _HomePageState extends State<HomePage> {
       home: Scaffold(
         backgroundColor: Color(0xFF051518),
         appBar: AppBar(
+          leading: IconButton(
+            onPressed: () => setState(() {
+              Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => const InfoPage()),
+              );
+            }),
+            icon: Icon(Icons.info),
+            color: Colors.white,
+          ),
           backgroundColor: Color(0xFF051518),
           centerTitle: true,
           title: Text(
@@ -212,59 +220,53 @@ class _HomePageState extends State<HomePage> {
                 )
               ),
             ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  if (highestPPMValue != 0) {
+                    final shouldReset = await Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => GenerateReportForm(co2ppm: highestPPMValue)),
+                    );
 
-            /* Expanded(
-              flex: 2,
-              child: Container(
-                margin: EdgeInsets.fromLTRB(8, 4, 8, 4),
-                child: ElevatedButton.icon(
-                  onPressed: () async => {
-                    if (connectionStatus) {
-                      if (recording){
-                        // Stop Recording
-                        await writeCounter(recordedValues.toString().replaceAll(", ", "\n").replaceAll("[", "").replaceAll("]", "")),
-                        setState(() {
-                          _dialogBuilder(context);
-                        }),
-                        recording = false,
-
-                      } else {
-                        // Start Recording
-                        recordedValues = [],
-                        recording = true,
-                      }
-                    },
-                  },
-                  icon: Icon(
-                    recording ? Icons.stop : Icons.fiber_manual_record,
-                    size: connectionStatus ? 40 : 0,
-                    color:  Colors.red,
-                  ),
-                  label: Text(
-                    connectionStatus ? (recording ? "Stop Recording..." : "Start Recording") : "No Device Connected",
+                    if (shouldReset) {
+                      highestPPMValue = 0;
+                    }
+                  }
+                },
+                icon: Icon(
+                  Icons.edit_document,
+                  size: 20,
+                  color: Colors.black,
+                ),
+                label: FittedBox(
+                  fit: BoxFit.fitHeight,
+                  child: Text(
+                    "Generate Report",
                     style: TextStyle(
-                      fontSize: 30,
-                    ),
-                  ),
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll<Color>(connectionStatus ? Colors.grey.shade100 : Colors.grey.shade600),
-                    foregroundColor: WidgetStatePropertyAll<Color>(Colors.black),
-                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0)
-                      ),
+                      fontSize: 20,
                     ),
                   ),
                 ),
+                style: ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll<Color>(connectionStatus ? Colors.grey.shade100 : Colors.grey.shade600),
+                  foregroundColor: WidgetStatePropertyAll<Color>(Colors.black),
+                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0)
+                    ),
+                  ),
+                )
               ),
-            ), */
+            ),
           ],
         ),
       )
     );
   }
 
-  Future<void> _dialogBuilder(BuildContext context) {
+  /*Future<void> _dialogBuilder(BuildContext context) {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -294,7 +296,7 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
-  }
+  }*/
 
   Future<void> _navigateAndGetDevice(BuildContext context) async {
 
@@ -309,7 +311,6 @@ class _HomePageState extends State<HomePage> {
       // Check State of Device
       setState(() {
         selectedDevice = poppedDevice.device;
-        print(poppedDevice.state);
 
         if(poppedDevice.state == 1){
           BluetoothConnectionState? ev;
@@ -374,7 +375,7 @@ class _HomePageState extends State<HomePage> {
     await readData();
   }
 
-  Future<String> get _localPath async {
+  /*Future<String> get _localPath async {
       final directory = await getApplicationDocumentsDirectory();
       return directory.path;
   }
@@ -389,7 +390,7 @@ class _HomePageState extends State<HomePage> {
     final file = await _localFile;
 
     return file.writeAsString(data);
-  }
+  }*/
 
 }
 
