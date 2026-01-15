@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <SensirionI2cScd4x.h>
+#include <SplashScreen.h>
 
 // ArduinoBLE
 #include <BLEDevice.h>
@@ -81,9 +82,20 @@ String getStatusText(int value) {
 // DRAW SPLASH SCREEN
 // =================================================
 void drawSplashScreen() {
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextSize(3);
-  tft.drawString("eBlockTest.com", 10, 75);
+  tft.fillScreen(TFT_WHITE);
+
+  for (int i=0; i<sizeof(image); i++){
+    if (image[i] == 'b') tft.drawPixel(i % SCREEN_W, (int)(i / SCREEN_W), tft.color565(26, 34, 37));
+  }
+
+  for (int i=0; i<sizeof(image); i++){
+    if (image[i] == 'y') tft.drawPixel(i % SCREEN_W, (int)(i / SCREEN_W), tft.color565(94, 103, 108));
+  }
+
+  for (int i=0; i<sizeof(image); i++){
+    if (image[i] == 'g') tft.drawPixel(i % SCREEN_W, (int)(i / SCREEN_W), tft.color565(53, 127, 44));
+  }
+
 }
 
 // =================================================
