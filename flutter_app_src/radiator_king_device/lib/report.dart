@@ -10,6 +10,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class Report extends StatefulWidget {
   int co2ppm;
@@ -23,6 +25,16 @@ class Report extends StatefulWidget {
   State<StatefulWidget> createState() {
     return ReportState();
   }
+}
+
+Future<String?> getCompanyLogoImagePath() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('company_logo');
+}
+
+Future<String?> getCompanyName() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('company_name');
 }
 
 class ReportState extends State<Report> {
@@ -280,32 +292,57 @@ class ReportState extends State<Report> {
               padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  // final image = await rootBundle.load("assets/banner.png");
-                  // final imageBytes = image.buffer.asUint8List();
-
-                  // pw.Image imageBanner = pw.Image(pw.MemoryImage(imageBytes));
-
                   final pdfReport = pw.Document();
 
                   final now = DateTime.now();
                   String formatted = DateFormat('yMd').format(now);
 
+                  final String? imagePath = await getCompanyLogoImagePath();
+                  final String? companyName =  await getCompanyName();
+                  pw.MemoryImage? pdfImage;
+
+                  if (imagePath != null) {
+                    final imageFile = File(imagePath);
+                    final Uint8List imageBytes = imageFile.readAsBytesSync();
+
+                    pdfImage = pw.MemoryImage(imageBytes);
+                  }
+                  
                   pdfReport.addPage(pw.Page(
                     pageFormat: PdfPageFormat.a4,
                     build: (pw.Context context) {
                       return pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          /*pw.Container(
-                            alignment: pw.Alignment.center,
-                            child: imageBanner
-                          ),*/
+                          pw.Builder(
+                            builder: (context) {
+                              if (pdfImage != null) {
+                                return pw.Container(
+                                  alignment: pw.Alignment.center,
+                                  child: pw.Image(pdfImage),
+                                );
+                              } else {
+                                return pw.Container();
+                              }
+                            }
+                          ),
                           pw.Text(
                             "Digital Combustion Leak Report",
                             style: pw.TextStyle(
                               fontWeight: pw.FontWeight.bold,
                               fontSize: 20,
                             ),
+                          ),
+                          pw.Builder(
+                            builder: (context) {
+                              if (pdfImage != null) {
+                                return pw.Text(
+                                  "Conducted by $companyName",
+                                );
+                              } else {
+                                return pw.Container();
+                              }
+                            }
                           ),
                           pw.Text(
                             "Report generated on: $formatted\n\nVehicle: $vehicleSpecs\nNumber Plate: $licenseCode",
@@ -326,7 +363,7 @@ class ReportState extends State<Report> {
                         ]
                       );
                     }
-                  ));
+                  ));          
 
                   final output = await getTemporaryDirectory();
                   final file = File("${output.path}/eblocktest_report.pdf");

@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'package:radiator_king_device/generate_report.dart';
 import 'package:radiator_king_device/info.dart';
+import 'package:radiator_king_device/settings.dart';
 
 // Get Bluetooth Permissions
 Future getPermissions()async{
@@ -127,10 +128,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           actions: [
             IconButton(
               onPressed: () => setState(() {
-                /*Navigator.push(
+                Navigator.push(
                   context, 
-                  MaterialPageRoute(builder: (context) => const InfoPage()),
-                );*/
+                  MaterialPageRoute(builder: (context) => const Settings()),
+                );
               }),
               icon: Icon(Icons.settings),
               color: Colors.white,
