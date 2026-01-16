@@ -124,6 +124,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             icon: Icon(Icons.info),
             color: Colors.white,
           ),
+          actions: [
+            IconButton(
+              onPressed: () => setState(() {
+                /*Navigator.push(
+                  context, 
+                  MaterialPageRoute(builder: (context) => const InfoPage()),
+                );*/
+              }),
+              icon: Icon(Icons.settings),
+              color: Colors.white,
+            ),
+          ],
           backgroundColor: Color(0xFF051518),
           centerTitle: true,
           title: Text(
